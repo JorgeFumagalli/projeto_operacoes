@@ -14,4 +14,4 @@ Com produto selecionado, Pedidos com corte conta falta daquele produto. Sem filt
 
 ## Escopo
 
-CSVs excluem pedidos/clientes/datas inconsistentes. Estimativas de lote continuam marcadas. Clientes e pedidos recebem identificadores substitutos; a entrega mantém produtos e informações operacionais reais e deve ser revisada antes de publicação. Estoque fica fora desta etapa porque sua data de referência ainda não foi confirmada. Não há arquivo PBIX nesta entrega.
+CSVs excluem pedidos/clientes/datas inconsistentes. Estimativas de lote continuam marcadas. Clientes e pedidos recebem identificadores substitutos; os arquivos gerados pela demonstração pública são inteiramente sintéticos. Estoque fica fora desta etapa porque sua data de referência ainda não foi confirmada. Não há arquivo PBIX nesta entrega.

@@ -1,4 +1,4 @@
-"""Análise reproduzível. python analisar_operacoes.py operacoes.sqlite pasta_saida
+"""Análise reproduzível. python src/analisar.py operacoes.sqlite pasta_saida
 Dependências: pandas, numpy, matplotlib. Não altera a base de entrada.
 """
 from pathlib import Path
@@ -178,13 +178,13 @@ def main(db, out):
     <li>Datas inferidas por pedido são mantidas e identificadas. Empates e clientes conflitantes permanecem pendentes. Duplicatas candidatas não foram removidas.</li>
     <li>A estimativa de lote soma dias corridos a um lote numérico original do mesmo produto na data anterior mais próxima, no mesmo ano. A estimativa não é lote verificado.</li>
     <li>Estoque atualizado manualmente e sem data de referência confirmada. Esta etapa não calcula validade atual, perdas por vencimento, ruptura histórica nem utilização de capacidade.</li>
-    <li>Quantidades “7200UN” e “25.000 KG” têm unidade explícita, mas ainda exigem confirmação de compatibilidade com a unidade do item. Cinco quantidades estão ausentes. Não houve imputação desses sete valores.</li>
-    <li>Os clientes são apresentados por identificadores substitutos. Produtos e dados operacionais permanecem reais. A entrega é um material de trabalho privado.</li></ul>'''
+    <li>Quantidades ausentes ou com unidades em texto exigem conferência. Não há imputação automática desses valores.</li>
+    <li>Demonstração pública com dados inteiramente sintéticos. Os resultados desta execução não são os indicadores do estudo real.</li></ul>'''
     methodology=methodology.replace('</ul>','<li>Cliente: usar código cadastrado quando disponível ou nome associado a um único código. Sem código, usar nome normalizado. Nomes variantes sem código podem representar a mesma empresa e requerem revisão do cadastro.</li></ul>')
     sens=f'''<p>{summary['linhas_duplicatas_candidatas_base_consistente']} linhas da base consistente são candidatas a duplicata. A taxa de pedidos com corte é {summary['taxa_pedidos_com_corte']:.2%} incluindo essas linhas e {summary['taxa_corte_sem_linhas_duplicatas_candidatas']:.2%} ao retirar todas as candidatas ({summary['pedidos_sem_linhas_duplicatas_candidatas']} pedidos restantes). Este segundo cálculo é uma sensibilidade, não uma correção validada.</p>'''
     report=f'''<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Inteligência de expedição — análise exploratória</title><style>
     body{{font:16px/1.6 system-ui,sans-serif;color:#243447;background:#f1f4f7;margin:0}}main{{max-width:1120px;margin:auto;padding:40px 24px}}h1{{font-size:36px;line-height:1.15;color:#16324f}}h2{{font-size:23px;color:#16324f}}h3{{font-size:19px}}section{{background:white;border-radius:12px;padding:26px;margin:22px 0}}.cards{{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}}.card{{background:#16324f;color:white;padding:20px;border-radius:10px}}.card strong{{display:block;font-size:30px}}img{{max-width:100%;height:auto}}table{{border-collapse:collapse;width:100%;font-size:13px}}th,td{{padding:10px;text-align:left;border-bottom:1px solid #dde3eb}}th{{background:#edf3f7}}.table{{overflow-x:auto}}.muted{{color:#536575}}@media(max-width:750px){{.cards{{grid-template-columns:repeat(2,1fr)}}h1{{font-size:28px}}main{{padding:20px 12px}}}}@media print{{body{{background:white}}section{{break-inside:avoid}}.card{{color:#16324f;background:#eef3f7}}}}</style><main>
-    <p class="muted">Projeto profissional de Jorge Fumagalli · Etapa 2 revisada</p><h1>Inteligência de expedição e rastreabilidade</h1><p>Período dos registros analisáveis: {summary['data_min']} a {summary['data_max']}. Fonte: valores originais preservados do diário de 2025. Revisão de 07/10/2026: carregamentos com ano 2026 corrigidos para 2025 por confirmação do responsável. Datas de validade não alteradas.</p>
+    <p class="muted">Portfólio de Jorge Fumagalli · DEMONSTRAÇÃO SINTÉTICA</p><h1>Inteligência de expedição e rastreabilidade</h1><p>Período dos registros analisáveis: {summary['data_min']} a {summary['data_max']}. Fonte: registros fictícios gerados para demonstrar o tratamento. A regra de correção de 2026 para 2025 é específica deste estudo e aparece também nos exemplos sintéticos. Datas de validade não são alteradas.</p>
     <div class="cards">{''.join(f'<div class="card">{a}<strong>{b}</strong></div>' for a,b in cards)}</div>
     <section><h2>Resultados e implicações</h2>{issues_text}<h3>Ações sugeridas</h3><ol><li>Investigar a disponibilidade dos produtos com cortes recorrentes, conciliando pedidos, produção e estoque. Os dados não estabelecem a causa das faltas.</li><li>Tornar lote e quantidade campos obrigatórios no registro de expedição.</li><li>Conferir os pedidos com datas/clientes conflitantes e as quantidades pendentes antes de ampliar os indicadores.</li></ol></section>{figs}
     <section><h2>Produtos com mais pedidos afetados</h2><div class="table">{rank.to_html(index=False,escape=True,border=0)}</div><p>Os pedidos podem conter vários produtos. Não somar os pedidos por produto para obter o total da operação.</p></section>
@@ -232,15 +232,15 @@ Com produto selecionado, Pedidos com corte conta falta daquele produto. Sem filt
 
 ## Escopo
 
-CSVs excluem pedidos/clientes/datas inconsistentes. Estimativas de lote continuam marcadas. Clientes e pedidos recebem identificadores substitutos; a entrega mantém produtos e informações operacionais reais e deve ser revisada antes de publicação. Estoque fica fora desta etapa porque sua data de referência ainda não foi confirmada. Não há arquivo PBIX nesta entrega.
+CSVs excluem pedidos/clientes/datas inconsistentes. Estimativas de lote continuam marcadas. Clientes e pedidos recebem identificadores substitutos; nesta demonstração todos os cadastros e lançamentos são sintéticos. Estoque fica fora desta etapa porque sua data de referência ainda não foi confirmada. Não há arquivo PBIX nesta entrega.
 ''',encoding='utf-8')
     (out/'LEIA_ME.md').write_text('''# Etapa 2 — análise exploratória de operações revisada em 07/10/2026
 
 Abra relatorio_operacoes.html para consultar os resultados e gráficos. Os arquivos CSV de mensal, produtos, clientes e pedidos detalham os cálculos. indicadores.json contém os controles de conciliação. A pasta powerbi contém CSVs do modelo, medidas DAX e o roteiro do dashboard. A pasta graficos contém PNGs e SVGs para exportar.
 
-Reprodução: `python analisar_operacoes.py operacoes.sqlite saida`. Dependências: pandas, numpy e matplotlib. A fonte é o banco da etapa 1, sem alterações. Dados identificáveis de clientes/transportadores não são incluídos nos CSVs exportados, mas produtos e dados operacionais reais continuam presentes.
+Reprodução: `python src/analisar.py operacoes.sqlite saida`. Dependências: pandas, numpy e matplotlib. A fonte é o banco da etapa 1, sem alterações. Dados identificáveis de clientes/transportadores não são incluídos nos CSVs exportados, mas produtos e dados operacionais reais continuam presentes.
 
-Sete valores de quantidade continuam sem interpretação segura: cinco ausentes e dois textos com unidade (7200UN e 25.000 KG). Consulte quantidades_para_conferencia.csv. As taxas de corte por pedido são baseadas na presença de corte, não exigem somar unidades e incluem essas linhas quando pedido/data são consistentes. Taxas de quantidade excluem os valores indeterminados.
+Quantidades ausentes ou em texto ficam pendentes de conferência. Consulte quantidades_para_conferencia.csv. As taxas de corte por pedido são baseadas na presença de corte, não exigem somar unidades e incluem essas linhas quando pedido/data são consistentes. Taxas de quantidade excluem os valores indeterminados.
 ''',encoding='utf-8')
     print(json.dumps(summary,ensure_ascii=False,indent=2))
     print('TOP FALTAS',products.sort_values('pedidos_com_corte',ascending=False)[['codigo_produto','pedidos','pedidos_com_corte']].head(5).to_dict('records'))
@@ -248,11 +248,4 @@ Sete valores de quantidade continuam sem interpretação segura: cinco ausentes 
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('banco',type=Path);p.add_argument('saida',type=Path)
-    p.add_argument('--inicio',type=Path)
     a=p.parse_args();main(a.banco,a.saida)
-    if a.inicio:
-        from analisar_historico import run
-        initial,monthly=run(a.inicio,a.banco,a.saida/'historico')
-        block=f'''<section><h2>Planilha do início do projeto</h2><p>O arquivo inicial contém {initial['registros_iniciais']:,} registros de item. As datas válidas vão de {initial['periodo_inicio']} a {initial['periodo_fim']}. Há {initial['registros_sem_pedido']} registros sem pedido. A estrutura inclui unidade e peso em colunas próprias.</p><p>O histórico permanece separado: cadastro de produtos e pedidos ainda requer equivalência e validação. Esta leitura não comprova evolução de resultados entre os períodos.</p><div class="table">{monthly.rename(columns={'mes':'Mês','linhas_itens':'Linhas de itens','pedidos_identificados':'Pedidos identificados, não validados'}).to_html(index=False,border=0)}</div></section>'''
-        report=a.saida/'relatorio_operacoes.html'
-        report.write_text(report.read_text(encoding='utf-8').replace('</main></html>',block+'</main></html>'),encoding='utf-8')

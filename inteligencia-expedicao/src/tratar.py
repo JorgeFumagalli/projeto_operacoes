@@ -13,8 +13,6 @@ import zipfile
 import xml.etree.ElementTree as ET
 import pandas as pd
 import openpyxl
-from openpyxl.styles import Font, PatternFill, Alignment
-from openpyxl.worksheet.table import Table, TableStyleInfo
 
 
 def clean(v):
@@ -359,8 +357,8 @@ def run(source, out):
     report = '# Base operacional — primeira etapa de tratamento\n\n'
     report += '\n'.join(f'- {k}: {v}' for k,v in summary.items())
     report += '\n\n## Decisões e limites\n\n' + '\n'.join(f'- **{a}:** {b}' for a,b in rules.itertuples(index=False,name=None))
-    report += '\n\n## Como utilizar\n\nAbra base_operacional_tratada.xlsx. Carregamentos_tratados preserva todas as linhas e as colunas originais de lote/data. Base_pedido_data_unica separa registros com data única por pedido; datas inferidas continuam identificadas. Pendencias e Conferencia_pedidos exigem revisão antes de consolidar todos os indicadores. Originais_carregamentos contém os valores em cache do Excel, não suas fórmulas ou layouts. Estoque_snapshot não possui data de referência confirmada.\n\n'
-    report += 'Este é um pacote privado de trabalho, não a versão pública do portfólio.\n\n'
+    report += '\n\n## Como utilizar\n\nConsulte operacoes.sqlite e dados_planilha.json. A execução Python não exporta XLSX. Carregamentos_tratados preserva todas as linhas e as colunas originais de lote/data. Base_pedido_data_unica separa registros com data única por pedido; datas inferidas continuam identificadas. Pendencias e Conferencia_pedidos exigem revisão antes de consolidar todos os indicadores. Originais_carregamentos contém os valores em cache do Excel, não suas fórmulas ou layouts. Estoque_snapshot não possui data de referência confirmada.\n\n'
+    report += 'Na demonstração pública, os registros são sintéticos. Fontes privadas não devem ser publicadas.\n\n'
     report += 'Reproduzir: `pip install pandas openpyxl` e `python tratar_carregamentos_revisado.py "DIARIO DE CARREGAMENTO 2025.xlsx" saida`.\n'
     (out/'LEIA_ME.md').write_text(report,encoding='utf-8')
     (out/'consultas.sql').write_text('''-- Apenas pedidos com data única; inferências identificadas na origem.

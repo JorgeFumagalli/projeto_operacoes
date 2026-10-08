@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+outputs/
+data/private/
+*.xlsx
+*.xls
+*.sqlite
+*.db
+*.zip
+.env
