@@ -1,0 +1,24 @@
+-- Modelo: dCalendario, dClientes e dProdutos filtram fItens.
+-- dCalendario e dClientes também filtram fPedidos. Relações 1:* unidirecionais.
+-- Nenhuma relação entre as duas tabelas fato. Pedidos via fItens reage ao filtro de produto.
+Pedidos = DISTINCTCOUNT(fItens[pedido_id])
+
+Pedidos com corte = CALCULATE([Pedidos], fItens[com_corte] = 1)
+
+Taxa de pedidos com corte = DIVIDE([Pedidos com corte], [Pedidos])
+
+Linhas de itens = COUNTROWS(fItens)
+
+Linhas com lote original = CALCULATE([Linhas de itens], fItens[lote_status] = "registrado")
+
+Cobertura real de lote = DIVIDE([Linhas com lote original], [Linhas de itens])
+
+-- Medida de quantidade só é exibida ao selecionar um produto.
+Atendimento em quantidade por produto =
+IF(HASONEVALUE(dProdutos[codigo_produto]),
+   DIVIDE(CALCULATE(SUM(fItens[quantidade_atendida]), fItens[quantidade_valida] = 1),
+          CALCULATE(SUM(fItens[quantidade_solicitada]), fItens[quantidade_valida] = 1)),
+   BLANK())
+
+-- Cobertura do dashboard é a base consistente, não a origem inteira.
+-- Cobertura real de lote no relatório HTML usa a origem inteira e terá valor diferente.
