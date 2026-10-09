@@ -1,94 +1,86 @@
 # Inteligência de expedição e rastreabilidade
 
-**Como transformar registros manuais de carregamento em indicadores confiáveis de atendimento e qualidade de dados?**
+Análise de registros de carregamento para identificar faltas no atendimento dos pedidos e avaliar a qualidade dos dados de rastreabilidade.
 
-Desenvolvi este estudo a partir de registros reais de uma operação logística, com o objetivo de analisar o atendimento dos pedidos e a qualidade dos dados de expedição.
+**Tecnologias:** Python, Pandas, SQL, SQLite e Matplotlib.  
+**Integração analítica:** modelo de dados e medidas DAX preparados para Power BI.
 
-Estruturei um fluxo de tratamento em Python, preservei os valores originais e documentei as regras de negócio. A entrega reúne uma base auditável, consultas SQL, gráficos analíticos e a preparação dos dados para Power BI.
+## Contexto
 
-**Python · Pandas · SQL/SQLite · Análise exploratória · Qualidade de dados · DAX**
+Uma operação logística utilizava planilhas para registrar carregamentos e atualizar saldos de estoque manualmente. Os registros apresentavam lotes ausentes, datas conflitantes por pedido e quantidades sem interpretação segura.
 
-## Problema de negócio
+O projeto transforma esses registros em uma base auditável e indicadores de expedição, preservando os dados originais e identificando as alterações realizadas.
 
-O diário de carregamento e o estoque eram atualizados manualmente, sem integração com um sistema. Datas conflitantes por pedido, lotes ausentes e quantidades ambíguas dificultavam uma leitura confiável da operação.
+## Objetivos
 
-Organizei a análise em três perguntas:
+- Medir a incidência de pedidos com falta no carregamento.
+- Analisar a distribuição mensal dos pedidos.
+- Avaliar a cobertura de lote originalmente registrado.
+- Identificar registros que exigem conferência antes de integrar os indicadores.
 
-- Quantos pedidos possuem registros consistentes para análise?
-- Quais pedidos tiveram falta de produtos no carregamento?
-- Qual parcela dos registros possui lote originalmente informado?
+## Resultados
 
-## Minha contribuição
-
-- Traduzi as definições operacionais em regras de tratamento e indicadores.
-- Implementei o tratamento dos dados em Python, preservando os valores de origem e registrando as alterações.
-- Separei os pedidos com inconsistências sem resolução segura.
-- Analisei a incidência de cortes, a evolução mensal dos pedidos e a cobertura de registro de lote.
-- Preparei consultas SQL, gráficos, tabelas para um modelo estrela e medidas DAX.
-- Estruturei uma demonstração pública com dados sintéticos para permitir a execução do código sem divulgar os registros empresariais.
-
-## Resultados do estudo real
-
-Período da base com cliente e data consistentes: **08/01/2025 a 13/10/2025**.
+Estudo real referente aos registros analisáveis de **08/01/2025 a 13/10/2025**.
 
 | Indicador | Resultado |
 |---|---:|
-| Linhas de itens na origem | 6.428 |
-| Pedidos identificados na origem | 1.900 |
+| Registros de itens na origem | 6.428 |
+| Pedidos identificados | 1.900 |
 | Pedidos com cliente e data consistentes | 1.826 |
-| Pedidos com ao menos um corte | 43 / 1.826 — 2,35% |
-| Cobertura de lote original nas linhas de origem | 4.756 / 6.428 — 73,99% |
-| Pedidos separados da base consistente para conferência | 74 |
+| Pedidos com falta em pelo menos um item | 43 — 2,35% dos pedidos consistentes |
+| Registros com lote original informado | 4.756 — 73,99% dos registros de origem |
+| Pedidos separados para conferência | 74 |
 
-![Pedidos por mês — estudo real de 2025](docs/images/01_pedidos_mensais.png)
+![Pedidos por mês](docs/images/01_pedidos_mensais.png)
 
-### Interpretação e decisões sugeridas
+A análise evidencia duas frentes de atuação: investigar os produtos com faltas recorrentes e melhorar o preenchimento dos registros de expedição. Lotes estimados não são considerados evidência de rastreabilidade.
 
-A análise identificou 43 pedidos com falta em pelo menos um item. Esse indicador permite acompanhar a frequência de cortes na expedição; a causa das faltas depende de investigação adicional.
+Os resultados completos, denominadores e gráficos estão em [Resultados do estudo](docs/RESULTADOS_REAIS.md).
 
-A cobertura de lote original foi de 73,99% das linhas de origem. Os lotes estimados permanecem identificados separadamente e não representam rastreabilidade comprovada.
+## Tratamento dos dados
 
-Os 74 pedidos separados da base consistente evidenciam a necessidade de revisar os registros de cliente e data antes de ampliar a análise.
+O processamento preserva os valores originais e registra as transformações em uma tabela de auditoria.
 
-A partir desses achados, recomendo:
+As principais regras são:
 
-- Tornar lote e quantidade campos obrigatórios no registro de expedição.
-- Revisar os pedidos com conflitos de cliente ou data.
-- Investigar a disponibilidade dos produtos com cortes recorrentes, conciliando pedidos, produção e estoque.
+- **Quantidade atendida:** valor registrado em Qtde.
+- **Quantidade faltante:** valor registrado em Corte; campo vazio equivale a zero, conforme regra operacional confirmada.
+- **Quantidade solicitada:** quantidade atendida + quantidade faltante.
+- **Pedido com corte:** pedido com quantidade faltante positiva em pelo menos um item.
+- **Datas conflitantes:** resolução por data única válida ou maioria estrita, com cliente consistente. Casos sem decisão segura ficam separados.
+- **Lotes ausentes:** estimativas identificadas como não verificadas; lotes originais permanecem intactos.
+- **Duplicatas candidatas:** sinalizadas e preservadas.
+- **Quantidades ambíguas:** mantidas como pendências, sem imputação automática.
 
-Consulte [resultados e denominadores](docs/RESULTADOS_REAIS.md) e [metodologia](docs/METODOLOGIA.md).
+A correção de carregamentos registrados com ano 2026 para 2025 foi confirmada pelo responsável pelos dados e aplica-se exclusivamente a este estudo. Datas de validade não foram alteradas.
 
-Os resultados são descritivos. Não há redução de perdas, impacto financeiro ou melhoria causal medida neste estudo. Os meses inicial e final podem ser parciais.
+Consulte [Metodologia](docs/METODOLOGIA.md) para os critérios completos.
 
-## Executar a demonstração pública
+## Executar o projeto
 
-**Os registros da demonstração são inteiramente sintéticos.** O gerador não lê as planilhas empresariais. Os indicadores gerados são próprios da demonstração e diferem dos resultados do estudo real.
+A versão pública utiliza **dados inteiramente sintéticos**, gerados independentemente das planilhas empresariais. A execução demonstra o processamento, mas não reproduz os indicadores do estudo real.
 
-Os dados originais não acompanham o repositório.
+**Requisito:** Python 3.11 ou superior.
 
-Requer **Python 3.11 ou superior**. Execute os comandos na raiz do projeto.
-
-### 1. Criar o ambiente virtual
+### Criar o ambiente
 
 ```bash
 python -m venv .venv
 ```
 
-### 2. Ativar o ambiente
-
-No Windows PowerShell:
+Windows PowerShell:
 
 ```powershell
 .venv\Scripts\Activate.ps1
 ```
 
-No macOS ou Linux:
+macOS/Linux:
 
 ```bash
 source .venv/bin/activate
 ```
 
-### 3. Instalar as dependências e executar
+### Instalar e executar
 
 ```bash
 python -m pip install -r requirements.txt
@@ -96,73 +88,51 @@ python src/executar_demo.py
 python tests/validar_demo.py
 ```
 
-### 4. Consultar os resultados
-
-Abra no navegador:
+O relatório gerado pode ser aberto no navegador:
 
 ```text
 outputs/demo/analise/relatorio_operacoes.html
 ```
 
-A execução gera:
+### Saídas
 
-- Banco SQLite com registros originais, tratados e auditoria.
-- Controles de qualidade e indicadores.
+- Banco SQLite com registros originais, tratados, pendências e auditoria.
+- Indicadores e tabelas analíticas em CSV.
 - Gráficos e relatório HTML.
-- Arquivos CSV para construção do modelo no Power BI.
+- Tabelas para importação no Power BI.
 
-As verificações cobrem preservação dos registros, correção do ano, lotes originais e estimados, conflitos por pedido, duplicatas candidatas e cálculo dos indicadores.
+As verificações validam a preservação dos registros, as regras de tratamento e os denominadores dos indicadores.
 
-Os arquivos de saída ficam fora do versionamento pelo Git.
+## Estrutura
 
-## Organização do repositório
-
-| Pasta ou arquivo | Conteúdo |
+| Diretório | Finalidade |
 |---|---|
-| `src/` | Geração sintética, tratamento auditável e análise |
-| `sql/` | Consultas sobre o banco tratado |
-| `docs/` | Resultados reais agregados, gráficos e metodologia |
-| `powerbi/` | Medidas DAX e roteiro do modelo estrela |
-| `data/` | Política de dados e orientação para fontes privadas |
-| `tests/` | Verificações das regras de negócio da demonstração |
-| `requirements.txt` | Dependências com versões fixadas |
-| `.gitignore` | Exclusão de fontes privadas, ambientes e saídas |
+| `src/` | Geração dos dados sintéticos, tratamento e análise |
+| `sql/` | Consultas analíticas |
+| `docs/` | Metodologia e resultados agregados do estudo real |
+| `powerbi/` | Medidas DAX e especificação do modelo |
+| `data/` | Orientações sobre as fontes de dados |
+| `tests/` | Verificações das regras de negócio |
 
-## Regras de negócio e decisões analíticas
+## Power BI
 
-- **Quantidade atendida:** valor registrado em Qtde.
-- **Quantidade faltante:** valor registrado em Corte. Campo vazio significa zero, conforme confirmação do responsável.
-- **Quantidade solicitada:** atendida + faltante.
-- **Pedido com corte:** pedido com quantidade faltante positiva em pelo menos um item.
-- **Datas:** carregamentos registrados com ano 2026 foram corrigidos para 2025 por confirmação do responsável, preservando mês, dia e valor original. A regra é específica deste arquivo; datas de validade não foram alteradas.
-- **Conflitos:** pedidos sem resolução segura permanecem separados da base consistente. Inferências de data são identificadas e auditadas.
-- **Lotes:** valores originais são preservados; estimativas recebem identificação de não verificadas.
-- **Duplicatas:** candidatas são sinalizadas e mantidas até confirmação.
-- **Quantidades ambíguas:** permanecem pendentes, sem imputação automática.
-- **Unidades:** taxas de atendimento em quantidade são calculadas por produto, evitando somar unidades diferentes.
+O projeto inclui a especificação de um modelo estrela e medidas para análise de expedição, atendimento e rastreabilidade.
+
+O roteiro está em [Modelo e dashboard](powerbi/ROTEIRO.md). O arquivo PBIX ainda não integra esta versão.
 
 ## Limitações
 
-O estoque possui atualização manual e data de referência não confirmada. Por isso, esta etapa não calcula ruptura histórica, validade atual ou utilização de capacidade.
-
-Cortes representam falta no carregamento. Não permitem concluir atraso ou falha de entrega ao cliente.
-
-A planilha histórica inicial foi analisada separadamente. Diferenças de layout e cadastro impedem sua integração automática ao diário de 2025 e não sustentam uma comparação de melhoria antes e depois.
-
-## Estado do projeto
-
-- Tratamento auditável dos dados: concluído.
-- Análise exploratória e documentação: concluídas.
-- Demonstração sintética executável: concluída.
-- Modelo de dados e medidas para Power BI: especificados.
-- Dashboard PBIX: ainda não construído.
-
-O próximo passo é construir o dashboard com páginas de expedição, atendimento e rastreabilidade.
+- Os dados empresariais não são distribuídos no repositório.
+- Os indicadores de corte medem falta no carregamento, não atraso ou entrega ao cliente.
+- Quantidades de produtos com unidades distintas não são agregadas em uma taxa física geral.
+- Lotes estimados não comprovam rastreabilidade.
+- O estoque não possui data de referência confirmada para análise histórica.
+- Os resultados são descritivos e não comprovam impacto financeiro ou melhoria causal.
+- Os meses inicial e final podem representar períodos parciais.
 
 ## Autor
 
-**Jorge Fumagalli**
-
+**Jorge Fumagalli**  
 MBA em Data Science & Analytics — USP/ESALQ, concluído em 2026.
 
 [GitHub](https://github.com/JorgeFumagalli) · [LinkedIn](https://www.linkedin.com/in/jorge-fumagalli)
