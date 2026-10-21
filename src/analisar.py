@@ -189,51 +189,152 @@ def main(db, out):
     <section><h2>Resultados e implicações</h2>{issues_text}<h3>Ações sugeridas</h3><ol><li>Investigar a disponibilidade dos produtos com cortes recorrentes, conciliando pedidos, produção e estoque. Os dados não estabelecem a causa das faltas.</li><li>Tornar lote e quantidade campos obrigatórios no registro de expedição.</li><li>Conferir os pedidos com datas/clientes conflitantes e as quantidades pendentes antes de ampliar os indicadores.</li></ol></section>{figs}
     <section><h2>Produtos com mais pedidos afetados</h2><div class="table">{rank.to_html(index=False,escape=True,border=0)}</div><p>Os pedidos podem conter vários produtos. Não somar os pedidos por produto para obter o total da operação.</p></section>
     <section><h2>Sensibilidade às duplicatas</h2>{sens}</section><section><h2>Definições e limites</h2>{methodology}</section>
-    <section><h2>Próximo passo: Power BI</h2><p>O pacote inclui CSVs para um modelo estrela, medidas DAX e um roteiro de três páginas: expedição, atendimento e rastreabilidade. Esta entrega contém a análise e a especificação; não contém um arquivo PBIX.</p></section></main></html>'''
+    <section><h2>Dashboard Power BI</h2><p>O repositório disponibiliza o relatório de demonstração em powerbi/inteligencia_expedicao_demo.pbix, com páginas de visão geral, rastreabilidade e atendimento. Esta execução gera os CSVs para atualização das fontes; não gera nem altera o PBIX automaticamente. As imagens e o relatório público utilizam dados sintéticos.</p></section></main></html>'''
     (out/'relatorio_operacoes.html').write_text(report,encoding='utf-8')
-    (out/'powerbi/medidas.dax').write_text('''-- Modelo: dCalendario, dClientes e dProdutos filtram fItens.
--- dCalendario e dClientes também filtram fPedidos. Relações 1:* unidirecionais.
--- Nenhuma relação entre as duas tabelas fato. Pedidos via fItens reage ao filtro de produto.
+    (out/'powerbi/medidas.dax').write_text('''-- Criar cada medida separadamente. A última expressão é uma COLUNA de fItens.
+-- Dimensões filtram fatos em sentido único; pedidos usam fItens para reagir a produto.
 Pedidos = DISTINCTCOUNT(fItens[pedido_id])
 
-Pedidos com corte = CALCULATE([Pedidos], fItens[com_corte] = 1)
+Pedidos com corte =
+COALESCE(CALCULATE(DISTINCTCOUNT(fItens[pedido_id]), fItens[com_corte] = 1), 0)
 
 Taxa de pedidos com corte = DIVIDE([Pedidos com corte], [Pedidos])
 
+Pedidos sem corte nos itens selecionados = [Pedidos] - [Pedidos com corte]
+
 Linhas de itens = COUNTROWS(fItens)
 
-Linhas com lote original = CALCULATE([Linhas de itens], fItens[lote_status] = "registrado")
+Linhas com lote original =
+COALESCE(CALCULATE([Linhas de itens], fItens[lote_status] = "registrado"), 0)
 
-Cobertura real de lote = DIVIDE([Linhas com lote original], [Linhas de itens])
+Cobertura de lote original = DIVIDE([Linhas com lote original], [Linhas de itens])
 
--- Medida de quantidade só é exibida ao selecionar um produto.
+-- Compatibilidade com o nome utilizado na especificação inicial.
+Cobertura real de lote = [Cobertura de lote original]
+
+Linhas com lote estimado =
+COALESCE(CALCULATE([Linhas de itens], fItens[lote_status] = "estimado_nao_verificado"), 0)
+
+Linhas sem lote =
+COALESCE(CALCULATE([Linhas de itens], fItens[lote_status] = "ausente"), 0)
+
+-- Medida complementar: não integra as três páginas publicadas.
+-- Seleção única de produto é necessária; cadastro/unidade precisam ser consistentes.
 Atendimento em quantidade por produto =
-IF(HASONEVALUE(dProdutos[codigo_produto]),
-   DIVIDE(CALCULATE(SUM(fItens[quantidade_atendida]), fItens[quantidade_valida] = 1),
-          CALCULATE(SUM(fItens[quantidade_solicitada]), fItens[quantidade_valida] = 1)),
-   BLANK())
+IF(
+    HASONEVALUE(dProdutos[codigo_produto]),
+    DIVIDE(
+        CALCULATE(SUM(fItens[quantidade_atendida]), fItens[quantidade_valida] = 1),
+        CALCULATE(SUM(fItens[quantidade_solicitada]), fItens[quantidade_valida] = 1)
+    ),
+    BLANK()
+)
 
--- Cobertura do dashboard é a base consistente, não a origem inteira.
--- Cobertura real de lote no relatório HTML usa a origem inteira e terá valor diferente.
-''',encoding='utf-8')
-    (out/'powerbi/ROTEIRO.md').write_text('''# Construção do dashboard em Power BI
+-- COLUNA CALCULADA: selecionar fItens > Nova coluna. Não criar como medida.
+Situação do lote =
+SWITCH(
+    fItens[lote_status],
+    "ausente", "Sem lote",
+    "estimado_nao_verificado", "Estimado — não verificado",
+    "registrado", "Original registrado",
+    "Não classificado"
+)
 
-1. Importar fItens.csv, fPedidos.csv, dProdutos.csv, dClientes.csv e dCalendario.csv com UTF-8, delimitador vírgula e localidade Inglês (Estados Unidos) para números com ponto decimal. Campos de identificação como texto, datas como Date, flags como número inteiro e quantidades como decimal.
-2. Criar relações unidirecionais 1:* de dCalendario[data] e dClientes[cliente_id] para ambas as tabelas fato. dProdutos[codigo_produto] filtra apenas fItens[codigo_produto]. Não relacionar as tabelas fato entre si. Marcar dCalendario como tabela de datas.
-3. Criar as medidas do arquivo medidas.dax uma por vez e formatar taxas como percentual.
-4. Página Expedição: cartões de pedidos e linhas de itens, pedidos por ano-mês, ranking de produtos por pedidos e clientes por pedidos. Seletores de data, produto e cliente. Mostrar ausência de registros como lacuna, sem concluir zero atividade.
-5. Página Atendimento: pedidos com corte e taxa de pedidos com corte, evolução mensal e ranking por produto com numerador e denominador. Mostrar atendimento em quantidade apenas quando um produto for selecionado. Tooltip deve informar a unidade/embalagem do produto após validação do cadastro.
-6. Página Rastreabilidade: cobertura original, linhas com lotes registrados/estimados/ausentes e linhas com datas inferidas/duplicatas candidatas. Nesta página os denominadores são a base consistente, e não a origem inteira. O relatório fornece ambas as coberturas para conciliação.
-7. fPedidos serve à análise de pedidos e clientes sem filtro de produto. Use a medida Pedidos baseada em fItens nos visuais que precisam reagir ao filtro de produto; não use contagens de fPedidos nesses visuais.
+-- Taxas: percentual com duas casas. Contagens: inteiro.
+-- Cobertura usa somente linhas com pedido, cliente e data consistentes.
+-- O HTML também apresenta cobertura na origem inteira: denominador diferente.
+-- Sem registros no contexto, DIVIDE retorna BLANK: ausência não equivale a 0%.
+''', encoding='utf-8')
+    (out/'powerbi/ROTEIRO.md').write_text('''# Dashboard de inteligência de expedição
 
-## Significado do filtro de produto
+Relatório Power BI concluído, com três páginas e dados inteiramente sintéticos. O arquivo `inteligencia_expedicao_demo.pbix` apresenta a demonstração pública; os resultados reais agregados estão em [RESULTADOS_REAIS.md](../docs/RESULTADOS_REAIS.md).
 
-Com produto selecionado, Pedidos com corte conta falta daquele produto. Sem filtro, conta pedido com falta em qualquer item. Não somar pedidos de cada produto. Não somar unidades de produtos distintos para obter um atendimento físico geral.
+## Abrir e atualizar
 
-## Escopo
+1. Baixar `inteligencia_expedicao_demo.pbix` desta pasta e abrir no Power BI Desktop. A visualização utiliza os dados importados e salvos no arquivo; a atualização depende das fontes locais.
+2. Para reproduzir as fontes, executar na raiz do projeto:
 
-CSVs excluem pedidos/clientes/datas inconsistentes. Estimativas de lote continuam marcadas. Clientes e pedidos recebem identificadores substitutos; nesta demonstração todos os cadastros e lançamentos são sintéticos. Estoque fica fora desta etapa porque sua data de referência ainda não foi confirmada. Não há arquivo PBIX nesta entrega.
-''',encoding='utf-8')
+```bash
+python -m pip install -r requirements.txt
+python src/executar_demo.py
+python tests/validar_demo.py
+```
+
+3. Os cinco CSVs ficam em `outputs/demo/analise/powerbi/`: `fItens.csv`, `fPedidos.csv`, `dProdutos.csv`, `dClientes.csv` e `dCalendario.csv`.
+4. No Power BI Desktop, abrir **Transformar dados**. Em cada uma das cinco consultas, selecionar a etapa **Fonte** e ajustar o caminho para o CSV correspondente no computador. Usar a engrenagem da etapa, quando disponível, ou editar apenas o caminho na expressão da Fonte. Preservar as etapas de transformação.
+5. Usar **Fechar e aplicar**, atualizar e conferir os controles abaixo. Salvar com filtros em Todos, período completo e Visão Geral aberta.
+
+A geração dos CSVs não cria nem altera o PBIX automaticamente. O arquivo PBIX é mantido no Power BI Desktop.
+
+## Modelo de dados
+
+Importação: UTF-8, delimitador vírgula. Identificadores como texto; datas como Data; flags como inteiro; quantidades como decimal. Interpretar números com ponto decimal usando localidade Inglês (Estados Unidos). A apresentação do relatório usa português brasileiro.
+
+| Dimensão — lado 1 | Fato — lado muitos |
+|---|---|
+| `dCalendario[data]` | `fItens[data]` |
+| `dCalendario[data]` | `fPedidos[data]` |
+| `dClientes[cliente_id]` | `fItens[cliente_id]` |
+| `dClientes[cliente_id]` | `fPedidos[cliente_id]` |
+| `dProdutos[codigo_produto]` | `fItens[codigo_produto]` |
+
+As cinco relações são ativas, 1:* e unidirecionais da dimensão para a fato. Não relacionar as fatos entre si. Marcar `dCalendario` como tabela de datas. Usar o campo de ano-mês em ordem cronológica nos eixos mensais.
+
+Criar as medidas de [medidas.dax](medidas.dax) individualmente; criar `Situação do lote` como coluna calculada em `fItens`. O arquivo inclui uma medida de compatibilidade com o nome antigo da cobertura e uma medida complementar de atendimento em quantidade; não é necessário exibi-las nas páginas.
+
+## Páginas publicadas
+
+| Página | Cartões | Gráficos |
+|---|---|---|
+| Visão Geral | Pedidos; pedidos com corte; taxa de pedidos com corte; cobertura de lote original | Pedidos por mês; taxa de pedidos com corte por mês |
+| Rastreabilidade | Linhas analisadas; lote estimado; sem lote; lote original | Situação do registro de lote por mês (%), em colunas 100% empilhadas; cobertura de lote original por produto |
+| Atendimento | Pedidos; pedidos com corte; taxa de pedidos com corte; pedidos sem corte nos itens selecionados | Pedidos com corte por produto; pedidos com corte por cliente |
+
+As três páginas têm segmentações por período, cliente e produto, usando as dimensões. A medida Pedidos usa `fItens`, inclusive para responder à seleção de produto. `fPedidos` permanece disponível para análises no grão do pedido sem filtro de produto.
+
+Na composição mensal de lotes, usar `[Linhas de itens]`, calendário no eixo e `Situação do lote` na legenda. A cobertura por produto usa `[Cobertura de lote original]`.
+
+## Regras de leitura
+
+- Qtde é quantidade atendida; Corte é quantidade faltante. Corte vazio significa zero.
+- Com produto selecionado, o indicador conta pedidos com falta nos produtos selecionados. Sem filtro de produto, conta pedidos com falta em qualquer item.
+- Pedidos sem corte é o complemento dentro dos itens selecionados; não comprova atendimento integral de outros itens do mesmo pedido.
+- Um pedido pode aparecer em vários produtos ou clientes conforme o agrupamento e os dados. Na base consistente cada pedido tem um único cliente; produtos podem compartilhar pedidos. Não somar contagens distintas por produto para obter o total.
+- Lotes estimados não representam rastreabilidade comprovada. Cobertura original exclui estimativas e ausências.
+- Os CSVs do modelo usam a base com pedido, cliente e data consistentes. A cobertura da origem inteira no HTML tem outro denominador.
+- Quantidades de produtos com unidades diferentes não são somadas. A medida complementar de quantidade usa apenas linhas válidas de um produto selecionado.
+- Ausência de registros não comprova ausência de atividade. Meses inicial e final podem ser parciais.
+
+## Controles da demonstração
+
+Sem filtros adicionais, período de 08/01/2025 a 15/04/2025:
+
+| Controle | Esperado |
+|---|---:|
+| Pedidos | 98 |
+| Pedidos com corte | 6 |
+| Taxa de pedidos com corte | 6,12% |
+| Pedidos sem corte nos itens selecionados | 92 |
+| Linhas analisadas | 295 |
+| Lote original | 220 |
+| Lote estimado | 72 |
+| Sem lote | 3 |
+| Cobertura de lote original | 74,58% |
+
+Conciliações: 220 + 72 + 3 = 295; 6 + 92 = 98. Pedidos mensais: janeiro 24, fevereiro 28, março 31 e abril 15. Em janeiro, 2 pedidos com corte em 24 = 8,33%. Selecionando apenas Produto fictício 1: 98 pedidos, nenhum com corte e taxa de 0%.
+
+Estes valores pertencem ao gerador atual, não à operação real. Mudanças no gerador exigem nova conciliação e atualização do PBIX e das imagens.
+
+## Padrão visual e evidências
+
+Fundo claro `#F3F5F8`, visuais brancos, fonte Segoe UI. Azul `#16324F` para pedidos; laranja `#C06B27` para cortes e lotes estimados; verde-petróleo `#087F8C` para lote original; cinza `#8A949E` para ausência. Contagens inteiras e taxas com duas casas decimais.
+
+Capturas em PNG, 1440 × 810 px, disponíveis em `docs/images/`: `dashboard_visao_geral.png`, `dashboard_rastreabilidade.png` e `dashboard_atendimento.png`.
+
+## Limites
+
+O PBIX é uma demonstração sintética do modelo analítico. Não contém as planilhas empresariais. Estoque sem data de referência confirmada permanece fora do painel. Os indicadores não medem atraso de entrega, perda financeira, causalidade ou melhoria antes/depois. A planilha histórica inicial não foi incorporada automaticamente ao diário de 2025.
+''', encoding='utf-8')
     (out/'LEIA_ME.md').write_text('''# Etapa 2 — análise exploratória de operações revisada em 07/10/2026
 
 Abra relatorio_operacoes.html para consultar os resultados e gráficos. Os arquivos CSV de mensal, produtos, clientes e pedidos detalham os cálculos. indicadores.json contém os controles de conciliação. A pasta powerbi contém CSVs do modelo, medidas DAX e o roteiro do dashboard. A pasta graficos contém PNGs e SVGs para exportar.

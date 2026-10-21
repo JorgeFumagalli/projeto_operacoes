@@ -1,86 +1,77 @@
 # Inteligência de expedição e rastreabilidade
 
-Análise de registros de carregamento para identificar faltas no atendimento dos pedidos e avaliar a qualidade dos dados de rastreabilidade.
+Análise de registros manuais de carregamento para acompanhamento de pedidos com falta e qualidade do registro de lotes. O projeto reúne tratamento auditável em Python, consultas SQL e um dashboard Power BI com três páginas.
 
-**Tecnologias:** Python, Pandas, SQL, SQLite e Matplotlib.  
-**Integração analítica:** modelo de dados e medidas DAX preparados para Power BI.
+**Python · Pandas · SQL/SQLite · Power BI · DAX · Qualidade de dados**
 
-## Contexto
+## Problema de negócio
 
-Uma operação logística utilizava planilhas para registrar carregamentos e atualizar saldos de estoque manualmente. Os registros apresentavam lotes ausentes, datas conflitantes por pedido e quantidades sem interpretação segura.
+O diário de carregamento e o estoque eram atualizados manualmente, sem integração com um sistema. Datas conflitantes por pedido, lotes ausentes e quantidades ambíguas dificultavam a consolidação de indicadores confiáveis.
 
-O projeto transforma esses registros em uma base auditável e indicadores de expedição, preservando os dados originais e identificando as alterações realizadas.
+O trabalho organiza os registros, preserva os valores de origem e documenta as decisões de tratamento. A análise identifica pedidos com falta no carregamento e distingue lotes originalmente registrados, estimados e ausentes.
 
-## Objetivos
+## Estudo real e demonstração pública
 
-- Medir a incidência de pedidos com falta no carregamento.
-- Analisar a distribuição mensal dos pedidos.
-- Avaliar a cobertura de lote originalmente registrado.
-- Identificar registros que exigem conferência antes de integrar os indicadores.
+O estudo utiliza registros reais de uma operação logística, cujas planilhas não são publicadas. O repositório disponibiliza resultados reais agregados e uma demonstração executável com dados inteiramente sintéticos. O gerador não lê as fontes empresariais.
 
-## Resultados
+**As imagens e o PBIX apresentam a demonstração sintética. Seus números são diferentes dos resultados do estudo real.**
 
-Estudo real referente aos registros analisáveis de **08/01/2025 a 13/10/2025**.
+## Dashboard Power BI
+
+[Baixar o relatório PBIX](powerbi/inteligencia_expedicao_demo.pbix) · [Instruções de abertura, atualização e modelo](powerbi/ROTEIRO.md) · [Medidas DAX](powerbi/medidas.dax)
+
+### Visão geral da expedição
+
+Volume mensal de pedidos, ocorrência de cortes e cobertura de lote original. Na demonstração: 98 pedidos, 6 com corte (6,12%) e cobertura original de 74,58% nas 295 linhas consistentes.
+
+![Visão geral da expedição — demonstração sintética](docs/images/dashboard_visao_geral.png)
+
+### Qualidade do registro de lotes
+
+Composição mensal dos registros e cobertura original por produto. A demonstração contém 220 linhas com lote original, 72 com lote estimado e 3 sem lote.
+
+![Qualidade do registro de lotes — demonstração sintética](docs/images/dashboard_rastreabilidade.png)
+
+### Atendimento
+
+Pedidos com corte por produto e cliente, com filtros de período, cliente e produto. O corte representa a quantidade que faltou carregar. Com filtro de produto, os cartões consideram os itens selecionados.
+
+![Atendimento — demonstração sintética](docs/images/dashboard_atendimento.png)
+
+## Resultados do estudo real de 2025
 
 | Indicador | Resultado |
 |---|---:|
-| Registros de itens na origem | 6.428 |
-| Pedidos identificados | 1.900 |
 | Pedidos com cliente e data consistentes | 1.826 |
-| Pedidos com falta em pelo menos um item | 43 — 2,35% dos pedidos consistentes |
-| Registros com lote original informado | 4.756 — 73,99% dos registros de origem |
+| Pedidos com ao menos um corte | 43 (2,35%) |
+| Cobertura de lote original nas 6.428 linhas de origem | 73,99% |
 | Pedidos separados para conferência | 74 |
 
-![Pedidos por mês](docs/images/01_pedidos_mensais.png)
+Consulte [resultados e denominadores](docs/RESULTADOS_REAIS.md) e [metodologia e limites](docs/METODOLOGIA.md). A cobertura do estudo real nesta tabela usa todas as linhas de origem; a cobertura do dashboard usa apenas a base consistente da demonstração.
 
-A análise evidencia duas frentes de atuação: investigar os produtos com faltas recorrentes e melhorar o preenchimento dos registros de expedição. Lotes estimados não são considerados evidência de rastreabilidade.
+Os resultados são descritivos. Lotes estimados não comprovam rastreabilidade; não há impacto financeiro ou melhoria causal medidos.
 
-Os resultados completos, denominadores e gráficos estão em [Resultados do estudo](docs/RESULTADOS_REAIS.md).
+## Executar a demonstração
 
-## Tratamento dos dados
-
-O processamento preserva os valores originais e registra as transformações em uma tabela de auditoria.
-
-As principais regras são:
-
-- **Quantidade atendida:** valor registrado em Qtde.
-- **Quantidade faltante:** valor registrado em Corte; campo vazio equivale a zero, conforme regra operacional confirmada.
-- **Quantidade solicitada:** quantidade atendida + quantidade faltante.
-- **Pedido com corte:** pedido com quantidade faltante positiva em pelo menos um item.
-- **Datas conflitantes:** resolução por data única válida ou maioria estrita, com cliente consistente. Casos sem decisão segura ficam separados.
-- **Lotes ausentes:** estimativas identificadas como não verificadas; lotes originais permanecem intactos.
-- **Duplicatas candidatas:** sinalizadas e preservadas.
-- **Quantidades ambíguas:** mantidas como pendências, sem imputação automática.
-
-A correção de carregamentos registrados com ano 2026 para 2025 foi confirmada pelo responsável pelos dados e aplica-se exclusivamente a este estudo. Datas de validade não foram alteradas.
-
-Consulte [Metodologia](docs/METODOLOGIA.md) para os critérios completos.
-
-## Executar o projeto
-
-A versão pública utiliza **dados inteiramente sintéticos**, gerados independentemente das planilhas empresariais. A execução demonstra o processamento, mas não reproduz os indicadores do estudo real.
-
-**Requisito:** Python 3.11 ou superior.
-
-### Criar o ambiente
+Requer Python 3.11 ou superior. Execute na raiz do projeto:
 
 ```bash
 python -m venv .venv
 ```
 
-Windows PowerShell:
+Ative o ambiente no Windows PowerShell:
 
 ```powershell
 .venv\Scripts\Activate.ps1
 ```
 
-macOS/Linux:
+Ou no macOS/Linux:
 
 ```bash
 source .venv/bin/activate
 ```
 
-### Instalar e executar
+Instale as dependências e execute:
 
 ```bash
 python -m pip install -r requirements.txt
@@ -88,51 +79,33 @@ python src/executar_demo.py
 python tests/validar_demo.py
 ```
 
-O relatório gerado pode ser aberto no navegador:
+Abra `outputs/demo/analise/relatorio_operacoes.html` no navegador. A execução gera um banco SQLite, controles de qualidade, gráficos e os cinco CSVs do modelo em `outputs/demo/analise/powerbi/`. As saídas ficam fora do Git. Para atualizar o PBIX em outro computador, ajuste os caminhos das fontes conforme o [roteiro](powerbi/ROTEIRO.md).
 
-```text
-outputs/demo/analise/relatorio_operacoes.html
-```
+## Regras analíticas
 
-### Saídas
+- Qtde representa quantidade atendida; Corte representa quantidade faltante; Corte vazio equivale a zero.
+- Correções preservam os valores originais e são auditadas. Pedidos com conflitos sem resolução segura ficam separados.
+- Duplicatas candidatas são mantidas e sinalizadas; lotes estimados recebem identificação de não verificados.
+- Contagens distintas de pedidos por produto não são somadas para obter o total de pedidos.
+- Quantidades de unidades diferentes não são agregadas; a medida complementar de atendimento em quantidade exige seleção de um produto e valores válidos.
 
-- Banco SQLite com registros originais, tratados, pendências e auditoria.
-- Indicadores e tabelas analíticas em CSV.
-- Gráficos e relatório HTML.
-- Tabelas para importação no Power BI.
+## Organização
 
-As verificações validam a preservação dos registros, as regras de tratamento e os denominadores dos indicadores.
-
-## Estrutura
-
-| Diretório | Finalidade |
+| Pasta | Conteúdo |
 |---|---|
-| `src/` | Geração dos dados sintéticos, tratamento e análise |
-| `sql/` | Consultas analíticas |
-| `docs/` | Metodologia e resultados agregados do estudo real |
-| `powerbi/` | Medidas DAX e especificação do modelo |
-| `data/` | Orientações sobre as fontes de dados |
-| `tests/` | Verificações das regras de negócio |
+| `src/` | Geração sintética, tratamento auditável e análise |
+| `sql/` | Consultas sobre o banco tratado |
+| `docs/` | Metodologia, resultados reais agregados e imagens |
+| `powerbi/` | Relatório PBIX, medidas DAX e documentação do modelo |
+| `data/` | Política de dados e orientação para fontes privadas |
+| `tests/` | Validação das regras de negócio da demonstração |
 
-## Power BI
+## Escopo concluído
 
-O projeto inclui a especificação de um modelo estrela e medidas para análise de expedição, atendimento e rastreabilidade.
+Tratamento, análise exploratória, demonstração executável e dashboard Power BI com três páginas concluídos. O relatório utiliza filtros por período, cliente e produto e relações unidirecionais entre dimensões e fatos.
 
-O roteiro está em [Modelo e dashboard](powerbi/ROTEIRO.md). O arquivo PBIX ainda não integra esta versão.
-
-## Limitações
-
-- Os dados empresariais não são distribuídos no repositório.
-- Os indicadores de corte medem falta no carregamento, não atraso ou entrega ao cliente.
-- Quantidades de produtos com unidades distintas não são agregadas em uma taxa física geral.
-- Lotes estimados não comprovam rastreabilidade.
-- O estoque não possui data de referência confirmada para análise histórica.
-- Os resultados são descritivos e não comprovam impacto financeiro ou melhoria causal.
-- Os meses inicial e final podem representar períodos parciais.
+A planilha histórica inicial foi analisada separadamente e não integra automaticamente o diário de 2025. O estoque manual sem data de referência confirmada não sustenta indicadores históricos de ruptura, validade atual ou capacidade.
 
 ## Autor
 
-**Jorge Fumagalli**  
-MBA em Data Science & Analytics — USP/ESALQ, concluído em 2026.
-
-[GitHub](https://github.com/JorgeFumagalli) · [LinkedIn](https://www.linkedin.com/in/jorge-fumagalli)
+[Jorge Fumagalli](https://github.com/JorgeFumagalli) · MBA em Data Science & Analytics — USP/ESALQ, concluído em 2026.

@@ -1,24 +1,53 @@
--- Modelo: dCalendario, dClientes e dProdutos filtram fItens.
--- dCalendario e dClientes também filtram fPedidos. Relações 1:* unidirecionais.
--- Nenhuma relação entre as duas tabelas fato. Pedidos via fItens reage ao filtro de produto.
+-- Criar cada medida separadamente. A última expressão é uma COLUNA de fItens.
+-- Dimensões filtram fatos em sentido único; pedidos usam fItens para reagir a produto.
 Pedidos = DISTINCTCOUNT(fItens[pedido_id])
 
-Pedidos com corte = CALCULATE([Pedidos], fItens[com_corte] = 1)
+Pedidos com corte =
+COALESCE(CALCULATE(DISTINCTCOUNT(fItens[pedido_id]), fItens[com_corte] = 1), 0)
 
 Taxa de pedidos com corte = DIVIDE([Pedidos com corte], [Pedidos])
 
+Pedidos sem corte nos itens selecionados = [Pedidos] - [Pedidos com corte]
+
 Linhas de itens = COUNTROWS(fItens)
 
-Linhas com lote original = CALCULATE([Linhas de itens], fItens[lote_status] = "registrado")
+Linhas com lote original =
+COALESCE(CALCULATE([Linhas de itens], fItens[lote_status] = "registrado"), 0)
 
-Cobertura real de lote = DIVIDE([Linhas com lote original], [Linhas de itens])
+Cobertura de lote original = DIVIDE([Linhas com lote original], [Linhas de itens])
 
--- Medida de quantidade só é exibida ao selecionar um produto.
+-- Compatibilidade com o nome utilizado na especificação inicial.
+Cobertura real de lote = [Cobertura de lote original]
+
+Linhas com lote estimado =
+COALESCE(CALCULATE([Linhas de itens], fItens[lote_status] = "estimado_nao_verificado"), 0)
+
+Linhas sem lote =
+COALESCE(CALCULATE([Linhas de itens], fItens[lote_status] = "ausente"), 0)
+
+-- Medida complementar: não integra as três páginas publicadas.
+-- Seleção única de produto é necessária; cadastro/unidade precisam ser consistentes.
 Atendimento em quantidade por produto =
-IF(HASONEVALUE(dProdutos[codigo_produto]),
-   DIVIDE(CALCULATE(SUM(fItens[quantidade_atendida]), fItens[quantidade_valida] = 1),
-          CALCULATE(SUM(fItens[quantidade_solicitada]), fItens[quantidade_valida] = 1)),
-   BLANK())
+IF(
+    HASONEVALUE(dProdutos[codigo_produto]),
+    DIVIDE(
+        CALCULATE(SUM(fItens[quantidade_atendida]), fItens[quantidade_valida] = 1),
+        CALCULATE(SUM(fItens[quantidade_solicitada]), fItens[quantidade_valida] = 1)
+    ),
+    BLANK()
+)
 
--- Cobertura do dashboard é a base consistente, não a origem inteira.
--- Cobertura real de lote no relatório HTML usa a origem inteira e terá valor diferente.
+-- COLUNA CALCULADA: selecionar fItens > Nova coluna. Não criar como medida.
+Situação do lote =
+SWITCH(
+    fItens[lote_status],
+    "ausente", "Sem lote",
+    "estimado_nao_verificado", "Estimado — não verificado",
+    "registrado", "Original registrado",
+    "Não classificado"
+)
+
+-- Taxas: percentual com duas casas. Contagens: inteiro.
+-- Cobertura usa somente linhas com pedido, cliente e data consistentes.
+-- O HTML também apresenta cobertura na origem inteira: denominador diferente.
+-- Sem registros no contexto, DIVIDE retorna BLANK: ausência não equivale a 0%.
