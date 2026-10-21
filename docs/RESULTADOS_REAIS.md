@@ -18,11 +18,11 @@ Resultados descritivos calculados nas planilhas fornecidas pelo responsável. A 
 
 ## Evidências visuais
 
-![Pedidos por mês do estudo real](images/01_pedidos_mensais.png)
+![Pedidos por mês do estudo real](dashboard_rastreabilidade.png)
 
-![Taxa mensal de pedidos com corte no estudo real](images/02_cortes_mensais.png)
+![Taxa mensal de pedidos com corte no estudo real](dashboard_atendimento.png)
 
-![Registro de lote na origem do estudo real](images/04_rastreabilidade.png)
+![Registro de lote na origem do estudo real](dashboard_rastreabilidade.png)
 
 Os meses inicial e final podem ser parciais. Cortes representam falta no carregamento; não informam atraso, entrega ao cliente ou perda financeira. Estes resultados não comprovam redução de perdas decorrente do projeto.
 
