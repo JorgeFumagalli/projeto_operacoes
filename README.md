@@ -18,7 +18,7 @@ O estudo utiliza registros reais de uma operação logística, cujas planilhas n
 
 ## Dashboard Power BI
 
-[Baixar o relatório PBIX](powerbi/inteligencia_expedicao_demo.pbix) · [Instruções de abertura, atualização e modelo](powerbi/ROTEIRO.md) · [Medidas DAX](powerbi/medidas.dax)
+[Baixar o relatório PBIX](powerbi/inteligencia-expedicao_demo.pbix) · [Instruções de abertura, atualização e modelo](powerbi/ROTEIRO.md) · [Medidas DAX](powerbi/medidas.dax)
 
 ### Visão geral da expedição
 

@@ -16,13 +16,11 @@ Resultados descritivos calculados nas planilhas fornecidas pelo responsável. A 
 | Quantidades sem interpretação segura | 7 linhas |
 | Período da base consistente | 08/01/2025 a 13/10/2025 |
 
-## Evidências visuais
+## Dashboard de demonstração
 
-![Pedidos por mês do estudo real](dashboard_rastreabilidade.png)
+As imagens do dashboard utilizam dados inteiramente sintéticos e não representam os resultados reais apresentados neste documento.
 
-![Taxa mensal de pedidos com corte no estudo real](dashboard_atendimento.png)
-
-![Registro de lote na origem do estudo real](dashboard_rastreabilidade.png)
+Consulte as três páginas na [apresentação do projeto](../README.md#dashboard-power-bi).
 
 Os meses inicial e final podem ser parciais. Cortes representam falta no carregamento; não informam atraso, entrega ao cliente ou perda financeira. Estes resultados não comprovam redução de perdas decorrente do projeto.
 

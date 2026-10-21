@@ -189,7 +189,7 @@ def main(db, out):
     <section><h2>Resultados e implicações</h2>{issues_text}<h3>Ações sugeridas</h3><ol><li>Investigar a disponibilidade dos produtos com cortes recorrentes, conciliando pedidos, produção e estoque. Os dados não estabelecem a causa das faltas.</li><li>Tornar lote e quantidade campos obrigatórios no registro de expedição.</li><li>Conferir os pedidos com datas/clientes conflitantes e as quantidades pendentes antes de ampliar os indicadores.</li></ol></section>{figs}
     <section><h2>Produtos com mais pedidos afetados</h2><div class="table">{rank.to_html(index=False,escape=True,border=0)}</div><p>Os pedidos podem conter vários produtos. Não somar os pedidos por produto para obter o total da operação.</p></section>
     <section><h2>Sensibilidade às duplicatas</h2>{sens}</section><section><h2>Definições e limites</h2>{methodology}</section>
-    <section><h2>Dashboard Power BI</h2><p>O repositório disponibiliza o relatório de demonstração em powerbi/inteligencia_expedicao_demo.pbix, com páginas de visão geral, rastreabilidade e atendimento. Esta execução gera os CSVs para atualização das fontes; não gera nem altera o PBIX automaticamente. As imagens e o relatório público utilizam dados sintéticos.</p></section></main></html>'''
+    <section><h2>Dashboard Power BI</h2><p>O repositório disponibiliza o relatório de demonstração em powerbi/inteligencia-expedicao_demo.pbix, com páginas de visão geral, rastreabilidade e atendimento. Esta execução gera os CSVs para atualização das fontes; não gera nem altera o PBIX automaticamente. As imagens e o relatório público utilizam dados sintéticos.</p></section></main></html>'''
     (out/'relatorio_operacoes.html').write_text(report,encoding='utf-8')
     (out/'powerbi/medidas.dax').write_text('''-- Criar cada medida separadamente. A última expressão é uma COLUNA de fItens.
 -- Dimensões filtram fatos em sentido único; pedidos usam fItens para reagir a produto.
@@ -247,11 +247,11 @@ SWITCH(
 ''', encoding='utf-8')
     (out/'powerbi/ROTEIRO.md').write_text('''# Dashboard de inteligência de expedição
 
-Relatório Power BI concluído, com três páginas e dados inteiramente sintéticos. O arquivo `inteligencia_expedicao_demo.pbix` apresenta a demonstração pública; os resultados reais agregados estão em [RESULTADOS_REAIS.md](../docs/RESULTADOS_REAIS.md).
+Relatório Power BI concluído, com três páginas e dados inteiramente sintéticos. O arquivo `inteligencia-expedicao_demo.pbix` apresenta a demonstração pública; os resultados reais agregados estão em [RESULTADOS_REAIS.md](../docs/RESULTADOS_REAIS.md).
 
 ## Abrir e atualizar
 
-1. Baixar `inteligencia_expedicao_demo.pbix` desta pasta e abrir no Power BI Desktop. A visualização utiliza os dados importados e salvos no arquivo; a atualização depende das fontes locais.
+1. Baixar `inteligencia-expedicao_demo.pbix` desta pasta e abrir no Power BI Desktop. A visualização utiliza os dados importados e salvos no arquivo; a atualização depende das fontes locais.
 2. Para reproduzir as fontes, executar na raiz do projeto:
 
 ```bash

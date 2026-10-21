@@ -1,10 +1,10 @@
 # Dashboard de inteligência de expedição
 
-Relatório Power BI concluído, com três páginas e dados inteiramente sintéticos. O arquivo `inteligencia_expedicao_demo.pbix` apresenta a demonstração pública; os resultados reais agregados estão em [RESULTADOS_REAIS.md](../docs/RESULTADOS_REAIS.md).
+Relatório Power BI concluído, com três páginas e dados inteiramente sintéticos. O arquivo `inteligencia-expedicao_demo.pbix` apresenta a demonstração pública; os resultados reais agregados estão em [RESULTADOS_REAIS.md](../docs/RESULTADOS_REAIS.md).
 
 ## Abrir e atualizar
 
-1. Baixar `inteligencia_expedicao_demo.pbix` desta pasta e abrir no Power BI Desktop. A visualização utiliza os dados importados e salvos no arquivo; a atualização depende das fontes locais.
+1. Baixar `inteligencia-expedicao_demo.pbix` desta pasta e abrir no Power BI Desktop. A visualização utiliza os dados importados e salvos no arquivo; a atualização depende das fontes locais.
 2. Para reproduzir as fontes, executar na raiz do projeto:
 
 ```bash
